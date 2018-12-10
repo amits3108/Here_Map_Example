@@ -76,6 +76,8 @@ public class BasicMapActivity extends AppCompatActivity {
     private Map map = null;
     private MapMarker mapMarker = null;
     private List<MapObject> m_mapObjectList = new ArrayList<>();
+
+    private List<MapObject> routeMapObjects = new ArrayList<>();
     private Button m_placeDetailButton;
 
     private boolean isPaused = false;
@@ -230,7 +232,9 @@ public class BasicMapActivity extends AppCompatActivity {
 
     private void calculateRoute(GeoCoordinate fromGeoCoordinate, GeoCoordinate ToGeoCoordinate) {
         // Declare the rm variable (the RouteManager)
+        clearPreviousRoute();
         RouteManager rm = new RouteManager();
+
 
         // Create the RoutePlan and add two waypoints
         RoutePlan routePlan = new RoutePlan();
@@ -261,6 +265,14 @@ public class BasicMapActivity extends AppCompatActivity {
     }
 
 
+
+    private void clearPreviousRoute() {
+        if (null != routeMapObjects && routeMapObjects.size() > 0) {
+            map.removeMapObjects(routeMapObjects);
+            routeMapObjects.clear();
+        }
+    }
+
     private class RouteListener implements RouteManager.Listener {
 
         // Method defined in Listener
@@ -277,7 +289,9 @@ public class BasicMapActivity extends AppCompatActivity {
 
                 for (RouteResult routeResultObj : routeResult) {
                     if (null != routeResultObj) {
-                        mapObjectList.add(new MapRoute(routeResultObj.getRoute()));
+                        MapRoute mapRoute = new MapRoute(routeResultObj.getRoute());
+                        mapObjectList.add(mapRoute);
+                        routeMapObjects.add(mapRoute);
                     }
                 }
                 map.addMapObjects(mapObjectList);
