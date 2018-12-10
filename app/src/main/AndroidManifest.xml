@@ -2,37 +2,45 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.saini.amit.here_map_example">
 
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <application
         android:allowBackup="true"
+        android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme"
-        android:hardwareAccelerated="true">
+        android:theme="@style/AppTheme">
+        <meta-data
+            android:name="com.here.android.maps.appid"
+            android:value="y6H0sIYAJYTN8zAiyXPE" />
+        <meta-data
+            android:name="com.here.android.maps.apptoken"
+            android:value="nyYY4OMN1qm-NatoWJt3cQ" />
 
-        <meta-data android:name="com.here.android.maps.appid" android:value="y6H0sIYAJYTN8zAiyXPE"/>
-        <meta-data android:name="com.here.android.maps.apptoken" android:value="nyYY4OMN1qm-NatoWJt3cQ"/>
-
-        <activity android:name=".view.activity.MapActivity">
-            <!--<intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>-->
-        </activity>
+        <activity android:name=".view.activity.MapActivity" />
+        <activity android:name=".view.activity.ResultListActivity" />
         <activity android:name=".view.activity.BasicMapActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity
+            android:name=".view.activity.NavDrawerActivity"
+            android:label="@string/title_activity_nav_drawer"
+            android:theme="@style/AppTheme.NoActionBar">
+            <!--<intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>-->
         </activity>
     </application>
 
