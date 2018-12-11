@@ -14,9 +14,11 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.view.animation.Animation;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.here.android.mpa.common.GeoBoundingBox;
 import com.here.android.mpa.common.GeoCoordinate;
 import com.here.android.mpa.common.GeoPosition;
 import com.here.android.mpa.common.Image;
@@ -68,7 +70,8 @@ public class BasicMapActivity extends AppCompatActivity {
             /*Manifest.permission.WRITE_EXTERNAL_STORAGE,*/
             Manifest.permission.INTERNET,
             Manifest.permission.ACCESS_WIFI_STATE,
-            Manifest.permission.ACCESS_NETWORK_STATE
+            Manifest.permission.ACCESS_NETWORK_STATE,
+            Manifest.permission.ACCESS_COARSE_LOCATION
     };
 
 
@@ -80,7 +83,7 @@ public class BasicMapActivity extends AppCompatActivity {
     private List<MapObject> routeMapObjects = new ArrayList<>();
     private Button m_placeDetailButton;
 
-    private boolean isPaused = false;
+    private boolean isStarted = false;
     private GeoCoordinate currentGeoCoordinate;
 
 
@@ -135,16 +138,16 @@ public class BasicMapActivity extends AppCompatActivity {
                     return;
                 }
                 mapFragment.getMapGesture().addOnGestureListener(onGestureListener);
-                startPositionManager();
+                /*do {
+
+                } while (!isStarted);*/
+
+                while (!isStarted) {
+                    startPositionManager();
+                }
+
                 createMapMarker();
                 setMapThings();
-
-//                getPositionManager().start(PositioningManager.LocationMethod.GPS_NETWORK);
-//                final RoutePlan routePlan = new RoutePlan();
-//
-//                 these two waypoints cover suburban roads
-//                routePlan.addWaypoint(new GeoCoordinate(48.98382, 2.50292));
-//                routePlan.addWaypoint(new GeoCoordinate(48.95602, 2.45939));
 
                 try {
                     // calculate a route for navigation
@@ -172,7 +175,7 @@ public class BasicMapActivity extends AppCompatActivity {
 
             setCurrentLocation();
 //            calculateRoute();
-            triggerGeocodeRequest();
+//            triggerGeocodeRequest();
 //            triggerRevGeocodeRequest();
         }
     }
@@ -189,6 +192,8 @@ public class BasicMapActivity extends AppCompatActivity {
 
             currentGeoCoordinate = getCurrentGeoCoordinate();
             setMapCurrentCoordinate(/*currentGeoCoordinate*/);
+
+            triggerGeocodeRequest();
         }
     }
 
@@ -265,7 +270,6 @@ public class BasicMapActivity extends AppCompatActivity {
     }
 
 
-
     private void clearPreviousRoute() {
         if (null != routeMapObjects && routeMapObjects.size() > 0) {
             map.removeMapObjects(routeMapObjects);
@@ -296,13 +300,22 @@ public class BasicMapActivity extends AppCompatActivity {
                 }
                 map.addMapObjects(mapObjectList);
 
-                setMapZooming();
+
+                if (routeResult.size() > 0) {
+                    zoomMap(routeResult.get(0).getRoute().getBoundingBox());
+                }
+
+//                setMapZooming();
 //                MapRoute mapRoute = new MapRoute(routeResult.get(0).getRoute());
 //                map.addMapObject(mapRoute);
             } else {
                 // Display a message indicating route calculation failure
             }
         }
+    }
+
+    private void zoomMap(GeoBoundingBox geoBoundingBox) {
+        map.zoomTo(geoBoundingBox, Map.Animation.LINEAR, Map.MOVE_PRESERVE_ORIENTATION);
     }
 
     private void triggerGeocodeRequest() {
@@ -312,32 +325,35 @@ public class BasicMapActivity extends AppCompatActivity {
          * providing a GeoCoordinate and radius before executing the request.
          */
 //        String query = "4350 Still Creek Dr,Burnaby";
-        String query = "Bar";
-        GeocodeRequest2 geocodeRequest = new GeocodeRequest2(query);
+        if (null != currentGeoCoordinate) {
+
+            String query = "Bar";
+            GeocodeRequest2 geocodeRequest = new GeocodeRequest2(query);
 //        GeoCoordinate coordinate = new GeoCoordinate(49.266787, -123.056640);
 //        GeoCoordinate coordinate = new GeoCoordinate(49.266787, -123.056640);
-        geocodeRequest.setSearchArea(currentGeoCoordinate, 500);
-        geocodeRequest.execute(new ResultListener<List<GeocodeResult>>() {
-            @Override
-            public void onCompleted(List<GeocodeResult> results, ErrorCode errorCode) {
-                if (errorCode == ErrorCode.NONE) {
-                    /*
-                     * From the result object, we retrieve the location and its coordinate and
-                     * display to the screen. Please refer to HERE Android SDK doc for other
-                     * supported APIs.
-                     */
-                    StringBuilder sb = new StringBuilder();
-                    for (GeocodeResult result : results) {
-                        sb.append(result.getLocation().getCoordinate().toString());
-                        sb.append("\n");
-                    }
-                    Log.e("sb text", sb.toString());
+            geocodeRequest.setSearchArea(currentGeoCoordinate, 500);
+            geocodeRequest.execute(new ResultListener<List<GeocodeResult>>() {
+                @Override
+                public void onCompleted(List<GeocodeResult> results, ErrorCode errorCode) {
+                    if (errorCode == ErrorCode.NONE) {
+                        /*
+                         * From the result object, we retrieve the location and its coordinate and
+                         * display to the screen. Please refer to HERE Android SDK doc for other
+                         * supported APIs.
+                         */
+                        StringBuilder sb = new StringBuilder();
+                        for (GeocodeResult result : results) {
+                            sb.append(result.getLocation().getCoordinate().toString());
+                            sb.append("\n");
+                        }
+                        Log.e("sb text", sb.toString());
 //                    updateTextView(sb.toString());
-                } else {
+                    } else {
 //                    updateTextView("ERROR:Geocode Request returned error code:" + errorCode);
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 
     private void triggerRevGeocodeRequest() {
@@ -492,8 +508,14 @@ public class BasicMapActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 /* Open the ResultListActivity */
-                Intent intent = new Intent(BasicMapActivity.this, ResultListActivity.class);
-                startActivityForResult(intent, Constant.requestCode.BAR_SELECTED);
+                if (null != s_ResultList && s_ResultList.size() > 0) {
+                    Intent intent = new Intent(BasicMapActivity.this, ResultListActivity.class);
+                    startActivityForResult(intent, Constant.requestCode.BAR_SELECTED);
+                } else {
+                    Toast.makeText(BasicMapActivity.this, "their is no current location of device," +
+                                    "please ON your device location.",
+                            Toast.LENGTH_LONG).show();
+                }
             }
         });
     }
@@ -532,15 +554,15 @@ public class BasicMapActivity extends AppCompatActivity {
 
     private void startPositionManager() {
         if (null != getPositionManager()) {
-            isPaused = false;
-            getPositionManager().start(PositioningManager.LocationMethod.GPS_NETWORK);
+            Log.e("startPositionManager ", isStarted + "  ");
+            isStarted = getPositionManager().start(PositioningManager.LocationMethod.GPS_NETWORK);
         }
     }
 
     private void stopPositionManager() {
         if (null != getPositionManager()) {
             getPositionManager().stop();
-            isPaused = true;
+            isStarted = true;
         }
     }
 
@@ -720,7 +742,7 @@ public class BasicMapActivity extends AppCompatActivity {
         switch (requestCode) {
             case Constant.requestCode.BAR_SELECTED:
                 if (resultCode == Activity.RESULT_OK) {
-                    String geoCoordinate = data.getStringExtra("DISCOVERY_RESULT");
+//                    String geoCoordinate = data.getStringExtra("DISCOVERY_RESULT");
 
                     double latitude = data.getDoubleExtra("LAT", 0);
                     double longitude = data.getDoubleExtra("LON", 0);
@@ -728,7 +750,8 @@ public class BasicMapActivity extends AppCompatActivity {
 
                     GeoCoordinate newGeoCoordinate = new GeoCoordinate(latitude, longitude, altitude);
 
-                    calculateRoute(currentGeoCoordinate, newGeoCoordinate);
+                    if (null != currentGeoCoordinate && null != newGeoCoordinate)
+                        calculateRoute(currentGeoCoordinate, newGeoCoordinate);
 
                 }
                 break;

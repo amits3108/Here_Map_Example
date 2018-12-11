@@ -86,7 +86,7 @@ public class ResultListActivity extends ListActivity {
         // TODO Add extras or a data URI to this intent as appropriate.
         GeoCoordinate geoCoordinate = ((PlaceLink) result).getPosition();
 
-        resultIntent.putExtra("DISCOVERY_RESULT", String.valueOf(geoCoordinate));
+//        resultIntent.putExtra("DISCOVERY_RESULT", String.valueOf(geoCoordinate));
 //        resultIntent.putExtra("DISCOVERY_RESULT",geoCoordinate);
         resultIntent.putExtra("LAT",geoCoordinate.getLatitude());
         resultIntent.putExtra("LON",geoCoordinate.getLongitude());
