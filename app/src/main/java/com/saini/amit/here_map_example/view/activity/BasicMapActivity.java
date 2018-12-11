@@ -12,10 +12,12 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.here.android.mpa.common.GeoBoundingBox;
@@ -485,7 +487,12 @@ public class BasicMapActivity extends AppCompatActivity {
             }
         });
 
+        final EditText edtSearchBar = findViewById(R.id.edt_search_bar);
         Button searchRequestButton = (Button) findViewById(R.id.searchRequestBtn);
+
+
+
+
         searchRequestButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -495,11 +502,20 @@ public class BasicMapActivity extends AppCompatActivity {
                  * parameters and categories.
                  */
                 cleanMap();
-                SearchRequest searchRequest = new SearchRequest("Bar");
+                String searchingStr = edtSearchBar.getText().toString().trim();
+
+                if (TextUtils.isEmpty(searchingStr)) {
+                    searchingStr = "Bar";
+                    Toast.makeText(BasicMapActivity.this, "By Default Searching For " + searchingStr, Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(BasicMapActivity.this, "Searching For " + searchingStr, Toast.LENGTH_SHORT).show();
+                }
+                SearchRequest searchRequest = new SearchRequest(searchingStr);
                 searchRequest.setSearchCenter(map.getCenter());
                 searchRequest.execute(discoveryResultPageListener);
             }
         });
+
     }
 
     private void initResultListButton() {

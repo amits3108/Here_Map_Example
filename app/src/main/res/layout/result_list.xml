@@ -1,43 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
-    <ListView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@android:id/list" />
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
     <LinearLayout
-        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tv_list_Searches"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="All the nearest Bar List"
+            android:textColor="#000"
+            android:textStyle="bold"
+            android:textSize="25sp"/>
+
+        <ListView
+            android:id="@android:id/list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/placeDetailLayout"
         android:layout_width="292dp"
         android:layout_height="212dp"
         android:layout_gravity="center"
-        android:id="@+id/placeDetailLayout"
+        android:background="?attr/colorPrimary"
+        android:orientation="vertical"
         android:weightSum="1"
-        android:background="?attr/colorPrimary">
+        android:visibility="gone">
 
         <Button
-            android:text="Close"
+            android:id="@+id/closeLayoutButton"
             android:layout_width="68dp"
             android:layout_height="wrap_content"
-            android:id="@+id/closeLayoutButton" />
+            android:text="Close" />
 
         <TextView
+            android:id="@+id/placeName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center"
-            android:id="@+id/placeName"
             android:layout_weight="0.5"
+            android:gravity="center"
             android:textColor="@android:color/white" />
 
         <TextView
+            android:id="@+id/placeLocation"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center"
-            android:id="@+id/placeLocation"
             android:layout_weight="0.5"
+            android:gravity="center"
             android:textColor="@android:color/white" />
     </LinearLayout>
 

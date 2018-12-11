@@ -11,6 +11,13 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
+        <EditText
+            android:id="@+id/edt_search_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Enter your needed place"
+            android:text="The Beer Cafe"
+            android:layout_weight="0.9"/>
 
         <Button
             android:id="@+id/aroundRequestBtn"
@@ -40,8 +47,8 @@
             android:id="@+id/searchRequestBtn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Search Nearest Bar" />
+            android:layout_weight="0.1"
+            android:text="Search" />
 
     </LinearLayout>
 
