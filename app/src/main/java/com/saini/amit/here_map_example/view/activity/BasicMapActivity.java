@@ -14,10 +14,12 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.animation.Animation;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.here.android.mpa.common.GeoBoundingBox;
@@ -57,6 +59,7 @@ import com.here.android.mpa.search.ReverseGeocodeRequest;
 import com.here.android.mpa.search.SearchRequest;
 import com.saini.amit.here_map_example.R;
 import com.saini.amit.here_map_example.view.Constant;
+
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -174,8 +177,8 @@ public class BasicMapActivity extends AppCompatActivity {
         map = mapFragment.getMap();
         if (null != map) {
             map.addTransformListener(onTransformListener);
-
             setCurrentLocation();
+            addPositionListener();
 //            calculateRoute();
 //            triggerGeocodeRequest();
 //            triggerRevGeocodeRequest();
@@ -237,6 +240,8 @@ public class BasicMapActivity extends AppCompatActivity {
         }
     }
 
+    RoutePlan routePlan = null;
+
     private void calculateRoute(GeoCoordinate fromGeoCoordinate, GeoCoordinate ToGeoCoordinate) {
         // Declare the rm variable (the RouteManager)
         clearPreviousRoute();
@@ -244,7 +249,7 @@ public class BasicMapActivity extends AppCompatActivity {
 
 
         // Create the RoutePlan and add two waypoints
-        RoutePlan routePlan = new RoutePlan();
+        routePlan = new RoutePlan();
 //        routePlan.addWaypoint(new GeoCoordinate(28.704060, 77.102493));   ////Delhi lat long
 //        currentGeoCoordinate = getCurrentGeoCoordinate();
 //        routePlan.addWaypoint(currentGeoCoordinate);  ///
@@ -259,7 +264,9 @@ public class BasicMapActivity extends AppCompatActivity {
 
 
         // Calculate the route
-        rm.calculateRoute(routePlan, new RouteListener());
+//        rm.calculateRoute(routePlan, new RouteListener());
+        if (!rm.isBusy())
+            rm.calculateRoute(routePlan, routeManagerListener);
     }
 
     private RouteOptions getRouteOptions() {
@@ -267,6 +274,7 @@ public class BasicMapActivity extends AppCompatActivity {
         RouteOptions routeOptions = new RouteOptions();
         routeOptions.setTransportMode(RouteOptions.TransportMode.CAR);
         routeOptions.setRouteType(RouteOptions.Type.FASTEST);
+        routeOptions.setStartDirection(60);
 
         return routeOptions;
     }
@@ -279,7 +287,50 @@ public class BasicMapActivity extends AppCompatActivity {
         }
     }
 
-    private class RouteListener implements RouteManager.Listener {
+    private RouteManager.Listener routeManagerListener = new RouteManager.Listener() {
+        // Method defined in Listener
+        @Override
+        public void onProgress(int i) {
+            // Display a message indicating calculation progress
+        }
+
+        // Method defined in Listener
+        @Override
+        public void onCalculateRouteFinished(RouteManager.Error error, List<RouteResult> routeResult) {
+            // If the route was calculated successfully
+            if (error == RouteManager.Error.NONE) {
+                // Render the route on the map
+                List<MapObject> mapObjectList = new ArrayList<>();
+                if (null != routeResult) {
+                    for (RouteResult routeResultObj : routeResult) {
+                        if (null != routeResultObj) {
+                            MapRoute mapRoute = new MapRoute(routeResultObj.getRoute());
+                            mapObjectList.add(mapRoute);
+                            routeMapObjects.add(mapRoute);
+                        }
+                    }
+                    map.addMapObjects(mapObjectList);
+//                    MapRoute.setRenderType(MapRoute.RenderType.PRIMARY);
+
+
+                    if (routeResult.size() > 0) {
+                        zoomMap(routeResult.get(0).getRoute().getBoundingBox());
+                    }
+                }
+
+//                setMapZooming();
+//                MapRoute mapRoute = new MapRoute(routeResult.get(0).getRoute());
+//                map.addMapObject(mapRoute);
+            } else {
+                // Display a message indicating route calculation failure
+                Toast.makeText(BasicMapActivity.this,
+                        "Error:route calculation error " + error,
+                        Toast.LENGTH_LONG).show();
+            }
+        }
+    };
+
+    /*private class RouteListener implements RouteManager.Listener {
 
         // Method defined in Listener
         public void onProgress(int percentage) {
@@ -292,19 +343,20 @@ public class BasicMapActivity extends AppCompatActivity {
             if (error == RouteManager.Error.NONE) {
                 // Render the route on the map
                 List<MapObject> mapObjectList = new ArrayList<>();
-
-                for (RouteResult routeResultObj : routeResult) {
-                    if (null != routeResultObj) {
-                        MapRoute mapRoute = new MapRoute(routeResultObj.getRoute());
-                        mapObjectList.add(mapRoute);
-                        routeMapObjects.add(mapRoute);
+                if (null != routeResult) {
+                    for (RouteResult routeResultObj : routeResult) {
+                        if (null != routeResultObj) {
+                            MapRoute mapRoute = new MapRoute(routeResultObj.getRoute());
+                            mapObjectList.add(mapRoute);
+                            routeMapObjects.add(mapRoute);
+                        }
                     }
-                }
-                map.addMapObjects(mapObjectList);
+                    map.addMapObjects(mapObjectList);
 
 
-                if (routeResult.size() > 0) {
-                    zoomMap(routeResult.get(0).getRoute().getBoundingBox());
+                    if (routeResult.size() > 0) {
+                        zoomMap(routeResult.get(0).getRoute().getBoundingBox());
+                    }
                 }
 
 //                setMapZooming();
@@ -312,13 +364,71 @@ public class BasicMapActivity extends AppCompatActivity {
 //                map.addMapObject(mapRoute);
             } else {
                 // Display a message indicating route calculation failure
+                Toast.makeText(BasicMapActivity.this,
+                        "Error:route calculation error " + error,
+                        Toast.LENGTH_LONG).show();
             }
         }
-    }
+    }*/
 
     private void zoomMap(GeoBoundingBox geoBoundingBox) {
         map.zoomTo(geoBoundingBox, Map.Animation.LINEAR, Map.MOVE_PRESERVE_ORIENTATION);
     }
+
+    /*private void showNavigation(List<RouteResult> routeResult){
+        Route route = routeResult.get(0).getRoute();
+
+        // move the map to the first waypoint which is starting point of
+        // the route
+        map.setCenter(routePlan.getWaypointAt(0),
+                Map.Animation.NONE);
+
+        // setting MapUpdateMode to RoadView will enable automatic map
+        // movements and zoom level adjustments
+        NavigationManager.getInstance().setMapUpdateMode
+                (NavigationManager.MapUpdateMode.ROADVIEW);
+
+        // adjust tilt to show 3D view
+        m_map.setTilt(80);
+
+        // adjust transform center for navigation experience in portrait
+        // view
+        m_mapTransformCenter = new PointF(m_map.getTransformCenter().x, (m_map
+                .getTransformCenter().y * 85 / 50));
+        m_map.setTransformCenter(m_mapTransformCenter);
+
+        // create a map marker to show current position
+        Image icon = new Image();
+        m_positionIndicatorFixed = new MapMarker();
+        try {
+            icon.setImageResource(R.drawable.gps_position);
+            m_positionIndicatorFixed.setIcon(icon);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        m_positionIndicatorFixed.setVisible(true);
+        m_positionIndicatorFixed.setCoordinate(m_map.getCenter());
+        map.addMapObject(m_positionIndicatorFixed);
+
+        m_mapFragment.getPositionIndicator().setVisible(false);
+
+        NavigationManager.getInstance().setMap(map);
+
+        // listen to real position updates. This is used when RoadView is
+        // not active.
+        PositioningManager.getInstance().addListener(
+                new WeakReference<PositioningManager.OnPositionChangedListener>(
+                        mapPositionHandler));
+
+        // listen to updates from RoadView which tells you where the map
+        // center should be situated. This is used when RoadView is active.
+        NavigationManager.getInstance().getRoadView().addListener(new
+                WeakReference<NavigationManager.RoadView.Listener>(roadViewListener));
+
+        // start navigation simulation travelling at 13 meters per second
+        NavigationManager.getInstance().simulate(route, 13);
+    }*/
 
     private void triggerGeocodeRequest() {
 //        m_resultTextView.setText("");
@@ -404,7 +514,9 @@ public class BasicMapActivity extends AppCompatActivity {
                      * also adjusted to display all markers.This can be done by merging the bounding
                      * box of each result and then zoom the map to the merged one.
                      */
-                    if (item.getResultType() == DiscoveryResult.ResultType.PLACE) {
+                    if (item.getResultType() == DiscoveryResult.ResultType.PLACE ||
+                            item.getResultType() == DiscoveryResult.ResultType.DISCOVERY ||
+                            item.getResultType() == DiscoveryResult.ResultType.UNKNOWN) {
                         PlaceLink placeLink = (PlaceLink) item;
                         addMarkerAtPlace(placeLink);
                     }
@@ -428,9 +540,32 @@ public class BasicMapActivity extends AppCompatActivity {
         MapMarker mapMarker = new MapMarker();
         mapMarker.setIcon(img);
         mapMarker.setCoordinate(new GeoCoordinate(placeLink.getPosition()));
+        mapMarker.setTitle(placeLink.getTitle());
+//        mapMarker.setVisible(true);
+        mapMarker.setDescription(placeLink.getDetailsRequest().toString());
+
         map.addMapObject(mapMarker);
+        map.setInfoBubbleAdapter(infoBubbleAdapter);
         m_mapObjectList.add(mapMarker);
     }
+
+    private Map.InfoBubbleAdapter infoBubbleAdapter = new Map.InfoBubbleAdapter() {
+        @Override
+        public View getInfoBubbleContents(MapMarker mapMarker) {
+
+            return null;
+        }
+
+        @Override
+        public View getInfoBubble(MapMarker mapMarker) {
+            View view = LayoutInflater.from(BasicMapActivity.this).inflate(R.layout.view_info_bubble, null, false);
+            TextView tvTitle = view.findViewById(R.id.tv_title);
+            TextView tvDistance = view.findViewById(R.id.tv_distance);
+            tvTitle.setText(mapMarker.getTitle());
+            tvDistance.setText(mapMarker.getDescription());
+            return view;
+        }
+    };
 
 
     private void initSearchControlButtons() {
@@ -467,6 +602,16 @@ public class BasicMapActivity extends AppCompatActivity {
                 exploreRequest.setSearchArea(map.getBoundingBox());
                 CategoryFilter filter = new CategoryFilter();
                 filter.add(Category.Global.SHOPPING);
+                filter.add(Category.Global.BUSINESS_SERVICES);
+                filter.add(Category.Global.EAT_DRINK);
+                filter.add(Category.Global.TRANSPORT);
+                filter.add(Category.Global.SIGHTS_MUSEUMS);
+                filter.add(Category.Global.FACILITIES);
+                filter.add(Category.Global.LEISURE_OUTDOOR);
+                filter.add(Category.Global.GOING_OUT);
+                filter.add(Category.Global.NATURAL_GEOGRAPHICAL);
+                filter.add(Category.Global.ADMINISTRATIVE_AREAS_BUILDINGS);
+                filter.add(Category.Global.ACCOMMODATION);
                 exploreRequest.setCategoryFilter(filter);
                 exploreRequest.execute(discoveryResultPageListener);
             }
@@ -489,10 +634,6 @@ public class BasicMapActivity extends AppCompatActivity {
 
         final EditText edtSearchBar = findViewById(R.id.edt_search_bar);
         Button searchRequestButton = (Button) findViewById(R.id.searchRequestBtn);
-
-
-
-
         searchRequestButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -605,6 +746,22 @@ public class BasicMapActivity extends AppCompatActivity {
 
         @Override
         public boolean onMapObjectsSelected(List<ViewObject> list) {
+            for (ViewObject object : list) {
+                if (object.getBaseType() == ViewObject.Type.USER_OBJECT && ((MapObject) object).getType() == MapObject.Type.MARKER) {
+                    MapMarker mapMarker = (MapMarker) object;
+                    System.out.println("Title is................." + mapMarker.getTitle());
+                    System.out.println("Desc is................." + mapMarker.getDescription());
+
+
+                    if (!mapMarker.isInfoBubbleVisible()) {
+//                        mapMarker.getInfoBubbleContents();
+                        mapMarker.getInfoBubbleHashCode();
+                    } else {
+                        mapMarker.hideInfoBubble();
+                    }
+                    return false;
+                }
+            }
             return false;
         }
 
@@ -682,7 +839,10 @@ public class BasicMapActivity extends AppCompatActivity {
     private PositioningManager.OnPositionChangedListener onPositionChangedListener = new PositioningManager.OnPositionChangedListener() {
         @Override
         public void onPositionUpdated(PositioningManager.LocationMethod locationMethod, GeoPosition geoPosition, boolean b) {
-
+            if (isStarted) {
+                currentGeoCoordinate = geoPosition.getCoordinate();
+                setMapCurrentCoordinate();
+            }
         }
 
         @Override

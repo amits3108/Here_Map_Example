@@ -6,6 +6,13 @@
 
 
     <!-- Map Fragment embedded with the map object -->
+    <Button
+        android:id="@+id/exploreRequestBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.1"
+        android:visibility="visible"
+        android:text="Explore all nearest business entities and so on" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -26,14 +33,6 @@
             android:layout_weight="1"
             android:visibility="gone"
             android:text="Around" />
-
-        <Button
-            android:id="@+id/exploreRequestBtn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:visibility="gone"
-            android:text="Explore" />
 
         <Button
             android:id="@+id/hereRequestBtn"
